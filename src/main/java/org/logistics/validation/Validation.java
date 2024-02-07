@@ -6,10 +6,9 @@ import org.logistics.data.model.*;
 import org.logistics.dtos.request.BookingRequest;
 import org.logistics.exceptions.*;
 
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
@@ -164,6 +163,7 @@ public class Validation {
   validateLastName(receiver.getLastName());
   validatePhoneNumber(receiver.getPhoneNumber());
   validateEmail(receiver.getEmailAddress());
+  validateAddress(receiver.getHomeAddress());
 
     }
 
@@ -215,8 +215,15 @@ public class Validation {
         }
     }
 
+public static BigDecimal addAmount(List<Booking> bookings){
+    BigDecimal amount = BigDecimal.ZERO;
 
+    for (Booking book : bookings) {
+        amount = amount.add(book.getAmount());
 
+    }
+    return amount;
+}
 
     }
 

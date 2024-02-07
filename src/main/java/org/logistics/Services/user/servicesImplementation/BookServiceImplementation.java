@@ -1,6 +1,7 @@
 package org.logistics.Services.user.servicesImplementation;
 
 import com.google.i18n.phonenumbers.NumberParseException;
+import org.logistics.Services.email.EmailService;
 import org.logistics.Services.user.userService.BookService;
 import org.logistics.Services.user.userService.WalletService;
 import org.logistics.data.model.*;
@@ -17,6 +18,7 @@ import static org.logistics.validation.Validation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.logistics.utils.Mapper.*;
 
@@ -28,6 +30,8 @@ public class BookServiceImplementation implements BookService {
     UserRepository userRepository;
     @Autowired
     WalletService walletService;
+    @Autowired
+    EmailService emailService;
     private static final BigDecimal FIXED_BOOKING_AMOUNT = BigDecimal.valueOf(2500);
     @Override
     public Booking book(BookingRequest bookingRequest) throws PhoneNumberValidationException, NumberParseException {
@@ -36,11 +40,12 @@ public class BookServiceImplementation implements BookService {
         }
 
        validateCategory(bookingRequest.getCategory());
-        Receiver receiver = mapReceiver(bookingRequest.getReceiver().getFirstName(),bookingRequest.getReceiver().getLastName(),bookingRequest.getReceiver().getPhoneNumber(),bookingRequest.getReceiver().getEmailAddress());
+        Receiver receiver = mapReceiver(bookingRequest.getReceiver().getFirstName(),bookingRequest.getReceiver().getLastName(),bookingRequest.getReceiver().getPhoneNumber(),bookingRequest.getReceiver().getEmailAddress(),bookingRequest.getReceiver().getHomeAddress());
         bookingRequest.setReceiver(receiver);
 
 
         Booking booking = new Booking();
+
         validateBooking(bookingRequest);
         validateReceiver(receiver);
 
@@ -58,9 +63,10 @@ public class BookServiceImplementation implements BookService {
        validateUserRoles(user.getRoles());
        validateLogin(user);
         Sender sender = mapSender(user.getFirstName(),  user.getLastName(), user.getEmailAddress(),user.getPhoneNumber(),user.getHomeAddress());
-
+        booking.setSender(sender);
 
         Booking book = mapBook("BID"+(bookingRepository.count()+1),sender,bookingRequest.getReceiver(),bookingRequest.getCategory(),bookingRequest.getParcelDescription(),bookingRequest.getParcelWeight(),booking.getAmount(), LocalDateTime.now(), user.getUserName());
+        emailService.sendEmail(booking.getSender().getSenderEmailAddress(),"Parcel Booking Payment","The price for the booking is " + booking.getAmount() + " naira, kindly make payment to complete your booking.");
         bookingRepository.save(book);
 
         return book;
@@ -73,14 +79,23 @@ public class BookServiceImplementation implements BookService {
 
         validateUserRoles(user.getRoles());
 
-        Booking booking = bookingRepository.findByUsername(username);
-        if (booking == null) throw new BookingNotFound("No booking found");
+        List<Booking> bookings = bookingRepository.findByUsername(username);
+        if (bookings.isEmpty()) {
+            throw new BookingNotFound("No bookings found for user: " + username);
+        }
 
-        walletService.deductMoney(username,booking.getAmount());
+      BigDecimal amount = addAmount(bookings);
 
-        booking.setBooked(true);
-        booking.setPaid(true);
-        bookingRepository.save(booking);
+
+        walletService.deductMoney(username,amount);
+
+        for (Booking booking : bookings) {
+            booking.setBooked(true);
+            booking.setPaid(true);
+
+            emailService.sendEmail(booking.getSender().getSenderEmailAddress(), "Parcel Booking Successful", String.valueOf(booking));
+            bookingRepository.save(booking);
+        }
     }
 
 }

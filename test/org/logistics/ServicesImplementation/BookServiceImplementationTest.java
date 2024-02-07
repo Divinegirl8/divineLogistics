@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,17 +43,18 @@ class BookServiceImplementationTest {
 @Test void register_User_Login_Book_Service() throws PhoneNumberValidationException, NumberParseException {
     Address address = address("Nigeria", "Lagos", "23", "Wellington", "12345");
 
-    RegisterRequest registerRequest = register_Request("firstName", "lastName", "Username_4", "Password6#", "Password6#", "email2@gmail.com", address,"09062346551",Roles.USER);
+    RegisterRequest registerRequest = register_Request("firstName", "lastName", "Username_4", "Password6#", "Password6#", "iamoluchimercy@gmail.com", address,"09062346551",Roles.USER);
     userRegistrationService.register(registerRequest);
 
     LoginRequest loginRequest = loginRequest("Username_4", "Password6#");
     userRegistrationService.login(loginRequest);
 
-    Receiver receiver = receiver("Sharon","Jones","09062346551","iam2@gmail.com");
+    Address receiverAddress = address("Nigeria","Ilorin","2","Taiwo","212345");
+
+    Receiver receiver = receiver("Sharon","Jones","09062346551","iam2@gmail.com",receiverAddress);
 
  BookingRequest bookingRequest =   bookingRequest("Username_4",receiver,"dress",Category.CLOTHING,10);
     bookService.book(bookingRequest);
-
 
 
     assertEquals(1,bookingRepository.count());
@@ -61,17 +63,19 @@ class BookServiceImplementationTest {
     @Test void register_User_Login_Book_Service_Pay_For_Bookings() throws PhoneNumberValidationException, NumberParseException {
         Address address = address("Nigeria", "Lagos", "23", "Wellington", "12345");
 
-        RegisterRequest registerRequest = register_Request("firstName", "lastName", "Username_4", "Password6#", "Password6#", "email2@gmail.com", address,"09062346551",Roles.USER);
+        RegisterRequest registerRequest = register_Request("firstName", "lastName", "Username_4", "Password6#", "Password6#", "iamoluchimercy@gmail.com", address,"09062346551",Roles.USER);
         userRegistrationService.register(registerRequest);
 
 
         LoginRequest loginRequest = loginRequest("Username_4", "Password6#");
         userRegistrationService.login(loginRequest);
 
-        Receiver receiver = receiver("Sharon","Jones","09062346551","iam2@gmail.com");
+        Address receiverAddress = address("Nigeria","Ilorin","2","Taiwo","212345");
 
+        Receiver receiver = receiver("Sharon","Jones","09062346551","iam2@gmail.com",receiverAddress);
         BookingRequest bookingRequest = bookingRequest("Username_4",receiver,"dress",Category.CLOTHING,10);
         Booking booking1 = bookService.book(bookingRequest);
+
         assertFalse(booking1.isBooked());
 
 
@@ -82,9 +86,13 @@ class BookServiceImplementationTest {
 
         bookService.payBookingCost("Username_4");
 
-        Booking booking = bookingRepository.findByUsername("Username_4");
+        bookService.book(bookingRequest);
+        bookService.payBookingCost("Username_4");
+
+        List<Booking> bookingList = bookingRepository.findByUsername("Username_4");
+        for (Booking booking : bookingList){
         assertTrue(booking.isBooked());
-        assertTrue(booking.isPaid());
+        assertTrue(booking.isPaid());}
 
     }
 
@@ -99,7 +107,9 @@ class BookServiceImplementationTest {
         LoginRequest loginRequest = loginRequest("Username_4", "Password6#");
         userRegistrationService.login(loginRequest);
 
-        Receiver receiver = receiver("Sharon","Jones","09062346551","iam2@gmail.com");
+        Address receiverAddress = address("Nigeria","Ilorin","2","Taiwo","212345");
+
+        Receiver receiver = receiver("Sharon","Jones","09062346551","iam2@gmail.com",receiverAddress);
 
         BookingRequest bookingRequest = bookingRequest("Username",receiver,"dress",Category.CLOTHING,10);
 
@@ -156,12 +166,13 @@ class BookServiceImplementationTest {
      return bookingRequest;
     }
 
-    public Receiver receiver(String firstName, String lastName,String phoneNumber,String emailAddress){
+    public Receiver receiver(String firstName, String lastName,String phoneNumber,String emailAddress,Address homeAddress){
      Receiver receiver = new Receiver();
      receiver.setFirstName(firstName);
      receiver.setLastName(lastName);
      receiver.setPhoneNumber(phoneNumber);
      receiver.setEmailAddress(emailAddress);
+     receiver.setHomeAddress(homeAddress);
 
 return receiver;
     }

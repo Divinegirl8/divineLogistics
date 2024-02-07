@@ -22,12 +22,13 @@ public class Mapper {
         return user;
     }
 
-    public static Receiver mapReceiver(String firstName,String lastName,String phoneNumber,String emailAddress){
+    public static Receiver mapReceiver(String firstName,String lastName,String phoneNumber,String emailAddress,Address homeAddress){
         Receiver receiver = new Receiver();
         receiver.setFirstName(firstName);
         receiver.setLastName(lastName);
         receiver.setPhoneNumber(phoneNumber);
         receiver.setEmailAddress(emailAddress);
+        receiver.setHomeAddress(homeAddress);
 
         return receiver;
     }
@@ -36,7 +37,7 @@ public class Mapper {
         Booking booking = new Booking();
         booking.setBookingId(bookingId);
         booking.setSender(sender);
-        booking.setReceiver(mapReceiver(receiver.getFirstName(),receiver.getLastName(),receiver.getPhoneNumber(),receiver.getEmailAddress()));
+        booking.setReceiver(mapReceiver(receiver.getFirstName(),receiver.getLastName(),receiver.getPhoneNumber(),receiver.getEmailAddress(),receiver.getHomeAddress()));
         booking.setCategory(category);
         booking.setParcelDescription(parcelDescription);
         booking.setParcelWeight(parcelWeight);

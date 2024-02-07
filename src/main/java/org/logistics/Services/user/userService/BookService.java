@@ -8,4 +8,5 @@ import org.logistics.exceptions.PhoneNumberValidationException;
 public interface BookService {
     Booking book(BookingRequest bookingRequest) throws PhoneNumberValidationException, NumberParseException;
     void payBookingCost(String username);
+
 }

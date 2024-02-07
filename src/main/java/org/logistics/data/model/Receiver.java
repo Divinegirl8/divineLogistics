@@ -10,4 +10,5 @@ public class Receiver {
     private String lastName;
     private String phoneNumber;
     private String emailAddress;
+    private Address homeAddress;
 }
